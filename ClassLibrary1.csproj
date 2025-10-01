@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>LdapAuthLib</PackageId>
+    <Version>1.0.2</Version>
+    <Authors>Eddy</Authors>
+    <Company>YourCompany</Company>
+    <Description>LDAP authentication library with token generation</Description>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.DirectoryServices" Version="9.0.9" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="9.0.9" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+  </ItemGroup>
+
+</Project>
