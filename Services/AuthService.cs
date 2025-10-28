@@ -1,21 +1,50 @@
 ﻿using ClassLibrary1.Models;
+using System;
 using System.DirectoryServices;
 using System.DirectoryServices.Protocols;
 using System.Net;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace ClassLibrary1.Services
 {
     public interface IAuthService
     {
-        Task<string> Login(LDAPAppSetting ldapAppSetting, JwtModel jwtModel, string username, string password);
+        Task<JwtTokenModel> RefreshToken(JwtAppSetting jwtAppSetting, JwtModel jwtInfo);
+        Task<JwtTokenModel> Login(LDAPAppSetting ldapAppSetting, JwtAppSetting jwtAppSetting, string username, string password);
+        Task<JwtTokenModel> LoginByPass(JwtAppSetting jwtAppSetting, string username, string password);
     }
 
     public class AuthService : IAuthService
     {
-        public async Task<string> Login(LDAPAppSetting ldapAppSetting, JwtModel jwtModel, string username, string password)
+        IJwtTokenService jwtTokenService = new JwtTokenService();
+
+        public async Task<JwtTokenModel> RefreshToken(JwtAppSetting jwtAppSetting, JwtModel jwtInfo)
         {
-            var token = string.Empty;
+            var jwtTokenModel = new JwtTokenModel();
+
+            try
+            {
+                var accessToken = jwtTokenService.GenerateJwtToken(jwtAppSetting, jwtInfo);
+                var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+                jwtTokenModel = new JwtTokenModel
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                };
+
+                return jwtTokenModel;
+            }
+            catch (LdapException ex)
+            {
+                return jwtTokenModel;
+            }
+        }
+
+        public async Task<JwtTokenModel> Login(LDAPAppSetting ldapAppSetting, JwtAppSetting jwtAppSetting, string username, string password)
+        {
+            var jwtTokenModel = new JwtTokenModel();
 
             try
             {
@@ -40,19 +69,65 @@ namespace ClassLibrary1.Services
                     Filter = $"(sAMAccountName={username})"
                 };
                 searcher.PropertiesToLoad.Add("displayName");
+                searcher.PropertiesToLoad.Add("mail");         // Email
+                searcher.PropertiesToLoad.Add("department");   // Department
+                searcher.PropertiesToLoad.Add("title");        // Job Title
 
                 SearchResult result = searcher.FindOne();
-                string fullName = result?.Properties["displayName"]?[0]?.ToString();
 
-                IJwtTokenService jwtTokenService = new JwtTokenService();
+                var jwtInfo = new JwtModel
+                {
+                    Username = result?.Properties["displayName"]?[0]?.ToString(),
+                    Email = result?.Properties["mail"]?[0]?.ToString(),
+                    Department = result?.Properties["department"]?[0]?.ToString(),
+                    JobTitle = result?.Properties["title"]?[0]?.ToString()
+                };
 
-                token = jwtTokenService.GenerateJwtToken(jwtModel, fullName);
+                var accessToken = jwtTokenService.GenerateJwtToken(jwtAppSetting, jwtInfo);
+                var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
-                return token;
+                jwtTokenModel = new JwtTokenModel
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                };
+
+                return jwtTokenModel;
             }
             catch (LdapException ex)
             {
-                return token;
+                return jwtTokenModel;
+            }
+        }
+
+        public async Task<JwtTokenModel> LoginByPass(JwtAppSetting jwtAppSetting, string username, string password)
+        {
+            var jwtTokenModel = new JwtTokenModel();
+
+            var jwtInfo = new JwtModel
+            {
+                Username = username,
+                Email = $"{username}@mail.com",
+                Department = "Information Technology",
+                JobTitle = "Guest"
+            };
+
+            try
+            {
+                var accessToken = jwtTokenService.GenerateJwtToken(jwtAppSetting, jwtInfo);
+                var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+                jwtTokenModel = new JwtTokenModel
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                };
+
+                return jwtTokenModel;
+            }
+            catch (LdapException ex)
+            {
+                return jwtTokenModel;
             }
         }
     }

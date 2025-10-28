@@ -5,14 +5,14 @@ namespace ClassLibrary1.Services
 {
     public interface IJwtTokenService
     {
-        string GenerateJwtToken(JwtModel config, string username);
+        string GenerateJwtToken(JwtAppSetting config, JwtModel jwtInfo);
     }
 
     public class JwtTokenService : IJwtTokenService
     {
-        public string GenerateJwtToken(JwtModel config, string username)
+        public string GenerateJwtToken(JwtAppSetting config, JwtModel jwtInfo)
         {
-            return JwtTokenHelper.GenerateJwtToken(config, username);
+            return JwtTokenHelper.GenerateJwtToken(config, jwtInfo);
         }
     }
 }

@@ -8,17 +8,21 @@ using System.Text;
 
 namespace ClassLibrary1.Helpers
 {
-    public class JwtTokenHelper
+    public static class JwtTokenHelper
     {
-        public static string GenerateJwtToken(JwtModel config, string username)
+        public static string GenerateJwtToken(JwtAppSetting config, JwtModel jwtInfo)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Name, jwtInfo.Username),
+                new Claim(JwtRegisteredClaimNames.Sub, jwtInfo.Username),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, jwtInfo.Email),
+                new Claim("department", jwtInfo.Department),
+                new Claim("jobtitle", jwtInfo.JobTitle)
             };
 
             var token = new JwtSecurityToken(
@@ -32,15 +36,21 @@ namespace ClassLibrary1.Helpers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public static string DecodeJwtToken(string token)
+        public static JwtDecodeModel DecodeJwtToken(string token)
         {
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(token);
 
-            // Extract username or other claims
-            var usernameClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            var result = new JwtDecodeModel
+            {
+                Username = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value,
+                Email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value,
+                Department = jwtToken.Claims.FirstOrDefault(c => c.Type == "department")?.Value,
+                JobTitle = jwtToken.Claims.FirstOrDefault(c => c.Type == "jobtitle")?.Value,
+                Claims = jwtToken.Claims
+            };
 
-            return usernameClaim ?? "Unknown User";
+            return result;
         }
     }
 }

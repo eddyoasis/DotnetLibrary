@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <PackageId>LdapAuthLib</PackageId>
-    <Version>1.0.2</Version>
+    <Version>1.0.9</Version>
     <Authors>Eddy</Authors>
     <Company>YourCompany</Company>
     <Description>LDAP authentication library with token generation</Description>
-    <IncludeSymbols>true</IncludeSymbols>
-    <IncludeSource>true</IncludeSource>
+    <!-- <IncludeSymbols>true</IncludeSymbols> -->
+    <!-- <IncludeSource>true</IncludeSource> -->
   </PropertyGroup>
 
   <ItemGroup>
